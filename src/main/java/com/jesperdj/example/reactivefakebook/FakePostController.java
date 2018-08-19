@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -39,9 +40,11 @@ public class FakePostController {
     }
 
     @PostMapping
-    public Mono<FakePost> create(@RequestBody FakePost post) {
+    public Mono<ResponseEntity<FakePost>> create(@RequestBody FakePost post) {
         post.setTimestamp(LocalDateTime.now());
-        return repository.save(post);
+        return repository.save(post).map(createdPost ->
+                ResponseEntity.created(UriComponentsBuilder.fromPath("/posts/{id}").buildAndExpand(post.getId()).toUri())
+                        .body(createdPost));
     }
 
     @PutMapping("/{id}")
