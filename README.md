@@ -2,7 +2,7 @@
 
 Demo of Spring WebFlux using controller annotations.
 
-This is similar to a Spring Web MVC webapplication, except that you can now use reactive types in your controller
+This is similar to a Spring Web MVC web application, except that you can now use reactive types in your controller
 to make your web application reactive.
 
 This is part 1. Part 2 is the same application, but then using the Spring WebFlux functional web framework API.
