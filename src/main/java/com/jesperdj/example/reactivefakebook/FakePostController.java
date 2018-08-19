@@ -14,6 +14,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 
 @RestController
@@ -42,9 +43,12 @@ public class FakePostController {
     @PostMapping
     public Mono<ResponseEntity<FakePost>> create(@RequestBody FakePost post) {
         post.setTimestamp(LocalDateTime.now());
-        return repository.save(post).map(createdPost ->
-                ResponseEntity.created(UriComponentsBuilder.fromPath("/posts/{id}").buildAndExpand(post.getId()).toUri())
-                        .body(createdPost));
+        return repository.save(post)
+                .map(createdPost -> ResponseEntity.created(uriForPost(post.getId())).body(createdPost));
+    }
+
+    private URI uriForPost(String id) {
+        return UriComponentsBuilder.fromPath("/posts/{id}").buildAndExpand(id).toUri();
     }
 
     @PutMapping("/{id}")
