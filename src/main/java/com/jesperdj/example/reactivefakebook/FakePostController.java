@@ -41,10 +41,11 @@ public class FakePostController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<FakePost>> create(@RequestBody FakePost post) {
-        post.setTimestamp(LocalDateTime.now());
-        return repository.save(post)
-                .map(createdPost -> ResponseEntity.created(uriForPost(post.getId())).body(createdPost));
+    public Mono<ResponseEntity<FakePost>> create(@RequestBody Mono<FakePost> requestBody) {
+        return requestBody
+                .doOnNext(post -> post.setTimestamp(LocalDateTime.now()))
+                .flatMap(repository::save)
+                .map(createdPost -> ResponseEntity.created(uriForPost(createdPost.getId())).body(createdPost));
     }
 
     private URI uriForPost(String id) {
@@ -52,13 +53,17 @@ public class FakePostController {
     }
 
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<FakePost>> update(@PathVariable("id") String id, @RequestBody FakePost post) {
+    public Mono<ResponseEntity<FakePost>> update(@PathVariable("id") String id, @RequestBody Mono<FakePost> requestBody) {
         return repository.findById(id)
-                .flatMap(existingPost -> {
+                .zipWith(requestBody)
+                .map(tuple -> {
+                    FakePost existingPost = tuple.getT1();
+                    FakePost updatedPost = tuple.getT2();
                     existingPost.setTimestamp(LocalDateTime.now());
-                    existingPost.setContent(post.getContent());
-                    return repository.save(existingPost);
+                    existingPost.setContent(updatedPost.getContent());
+                    return existingPost;
                 })
+                .flatMap(repository::save)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
